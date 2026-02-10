@@ -169,9 +169,10 @@ class statistics_model extends MY_Model
             'data_type'     => 'array',
         ];
         $data_for_analytic = $this->data_for_analytic( $params, ['task' => 'chart-pie'] );
+        $data_for_analytic_new = [];
         if($data_for_analytic){
             $data_for_analytic_new = array_column($data_for_analytic, 'total', 'status');
-        };
+        }
         $data_chart_pie =  [
             "completed"  		=> ( array_key_exists('completed', $data_for_analytic_new) ) ? $data_for_analytic_new['completed'] : 0,
             "processing"   		=> ( array_key_exists('processing', $data_for_analytic_new) ) ? $data_for_analytic_new['processing'] : 0,
