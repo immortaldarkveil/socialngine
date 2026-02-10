@@ -18,11 +18,11 @@ class services_model extends MY_Model {
         $result = null;
        
         if ($option['task'] == 'list-items') {
-            $this->db->select('s.id, s.desc, s.ids, s.name, s.min, s.max, s.price');
+            $this->db->select('s.id, s.desc, s.ids, s.name, s.min, s.max, s.price, s.avg_delivery_time, s.cate_id, s.type, s.dripfeed');
             $this->db->select('c.name as category_name');
             $this->db->from($this->tb_main." s");
             $this->db->join($this->tb_categories." c", "c.id = s.cate_id", 'left');
-            if ($params['cate_id'] != 0) {
+            if (isset($params['cate_id']) && $params['cate_id'] != 0) {
                 $this->db->where("s.cate_id", $params['cate_id']);
             }
             $this->db->where("s.status", "1");

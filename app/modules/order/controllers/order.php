@@ -97,10 +97,26 @@ class order extends My_UserController {
 
         $this->load->model('client/client_model', 'client_model');
         $items_category = $this->client_model->list_items(null, ['task' => 'list-items-category-in-services']);
+        
+        $select_service_id = get('service');
+        $select_cate_id    = null;
+        if($select_service_id && !empty($items_service)){
+            foreach ($items_service as $cat_services) {
+                foreach ($cat_services as $svc) {
+                    if ($svc['id'] == $select_service_id) {
+                        $select_cate_id = $svc['cate_id'];
+                        break 2;
+                    }
+                }
+            }
+        }
+
         $data = array(
-            "controller_name" => $this->controller_name,
-            'items_category'  => $items_category,
-            'items_service'   => $items_service,
+            "controller_name"   => $this->controller_name,
+            'items_category'    => $items_category,
+            'items_service'     => $items_service,
+            'select_service_id' => $select_service_id,
+            'select_cate_id'    => $select_cate_id,
         );
         $this->template->set_layout('user');
         $this->template->build('add/add', $data);

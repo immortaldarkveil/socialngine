@@ -35,7 +35,9 @@
 
                           foreach ($form_items_category as $key => $category) {
                       ?>
-                        <option value="<?=$key?>"><?=$category; ?></option>
+                        <option value="<?=$key?>" <?=(isset($select_cate_id) && $select_cate_id == $key) ? 'selected' : ''?>>
+                          <?=$category; ?>
+                        </option>
                       <?php }}?>
                     </select>
                   </div>
@@ -43,6 +45,22 @@
                     <label><?=lang("order_service")?></label>
                     <select name="service_id" class="form-control square ajaxChangeService" data-url="<?=cn($controller_name."/get_service/")?>">
                       <option> <?=lang("choose_a_service")?></option>
+                      <?php 
+                        if (isset($items_service) && isset($select_cate_id)) {
+                            foreach ($items_service as $cat_services) {
+                                $first_svc = reset($cat_services);
+                                if (isset($first_svc['cate_id']) && $first_svc['cate_id'] == $select_cate_id) {
+                                    foreach ($cat_services as $svc) {
+                      ?>
+                                    <option value="<?=$svc['id']?>" data-type="<?=$svc['type']?>" data-dripfeed="<?=$svc['dripfeed']?>" <?=(isset($select_service_id) && $select_service_id == $svc['id']) ? 'selected' : ''?> >
+                                        <?=$svc['id'] . ' - ' . $svc['name']?>
+                                    </option>
+                      <?php 
+                                    }
+                                }
+                            }
+                        }
+                      ?>
                     </select>
                   </div>
 
@@ -426,5 +444,11 @@
             }
         }
     });
+
+    <?php if (isset($select_service_id)) { ?>
+    setTimeout(function(){
+      $('.ajaxChangeService').trigger('change');
+    }, 500);
+    <?php } ?>
   });
 </script>

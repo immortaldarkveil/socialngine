@@ -134,21 +134,20 @@ class Smm_api
             $name = trim(str_replace(' ', '_', strtolower($api_params['name'])));
             return $api_params['id'] . '-' . $name . '.json';
         } else {
-            return $name . '.json';
+            // Fallback: hash the params to generate a unique filename
+            return 'provider_' . md5(json_encode($api_params)) . '.json';
         }
     }
     
     private function create_dir($params = null, $option = null)
     {
         $path = FCPATH . $params['path'];
-        $mode = (isset($option['mode'])) ? $option['mode'] : '0777'; 
-        if (!file_exists($params['path'])) {
+        if (!file_exists($path)) {
             $uold = umask(0);
-            mkdir($path, 0777);
+            mkdir($path, 0755, true);
             umask($uold);
             file_put_contents($path . "index.html", "<h1>404 Not Found</h1>");
-        } else {
-            return $path;
         }
+        return $path;
     }
 }

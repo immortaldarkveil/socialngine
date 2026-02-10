@@ -18,6 +18,7 @@ class services extends My_UserController
             "name" => ['name' => lang('Name'), 'class' => 'text-center'],
             "price" => ['name' => lang("rate_per_1000") . "(" . get_option("currency_symbol", "") . ")", 'class' => 'text-center'],
             "min_max" => ['name' => lang("min__max_order"), 'class' => ''],
+            "avg_time" => ['name' => lang("average_time"), 'class' => 'text-center'],
             "desc" => ['name' => lang("Description"), 'class' => 'text-center'],
         );
     }

@@ -77,7 +77,7 @@ class services extends My_AdminController {
         $this->form_validation->set_rules('name', 'name', 'trim|required|xss_clean');
         $this->form_validation->set_rules('category', 'category', 'trim|required|xss_clean');
         $this->form_validation->set_rules('min', 'min order', 'trim|required|greater_than[0]|xss_clean');
-        $this->form_validation->set_rules('max', 'max order', "trim|required|greater_than_equal_to[$min]xss_clean");
+        $this->form_validation->set_rules('max', 'max order', "trim|required|greater_than_equal_to[$min]|xss_clean");
         $this->form_validation->set_rules('add_type', 'Mode', 'trim|in_list[manual,api]|xss_clean');
         $this->form_validation->set_rules('status', 'status', 'trim|required|in_list[0,1]|xss_clean');
 

@@ -28,6 +28,9 @@
                 </td>
                 <td class="text-center w-5p"><div><?=$item_price ;?></div></td>
                 <td class="text-center w-10p text-muted"><?=$item['min'] . ' / ' . $item['max']?></td>
+                <td class="text-center w-10p text-muted">
+                  <?php echo (!empty($item['avg_delivery_time'])) ? $item['avg_delivery_time'] . ' '. lang('minutes') : lang('N/A'); ?>
+                </td>
                 <td class="text-center w-5p"> <?php echo $show_item_view;?></td>
               </tr>
             <?php }}?>

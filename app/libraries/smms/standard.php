@@ -10,55 +10,79 @@ class smm_standard{
       $this->ci      = &get_instance();
     }
 
+    /**
+     * Safely execute an API request and return decoded JSON.
+     * Returns ['error' => '...'] on connection failure instead of null.
+     */
+    private function safe_request($post) {
+      $raw = $this->connect($post);
+      if ($raw === false) {
+        return ['error' => 'API connection failed for: ' . $this->api_url];
+      }
+      $decoded = json_decode($raw, true);
+      if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+        return ['error' => 'Invalid JSON response from API: ' . substr($raw, 0, 200)];
+      }
+      return $decoded;
+    }
+
     public function order($data) {
       $post = array_merge(array('key' => $this->api_key, 'action' => 'add'), $data);
-      return json_decode($this->connect($post), true);
+      return $this->safe_request($post);
     }
 
     public function status($order_id) {
-      return json_decode($this->connect(array(
+      return $this->safe_request(array(
           'key' => $this->api_key,
           'action' => 'status',
           'order' => $order_id
-      )), true);
+      ));
     }
 
     public function multiStatus($order_ids) {
-      return json_decode($this->connect(array(
+      return $this->safe_request(array(
           'key' => $this->api_key,
           'action' => 'status',
           'orders' => implode(",", $order_ids)
-      )), true);
+      ));
     }
 
     public function services() { 
-      return json_decode($this->connect(array(
+      return $this->safe_request(array(
           'key' => $this->api_key,
           'action' => 'services',
-      )), true);
+      ));
     }
 
-    public function balance() { // get balance
-      return json_decode($this->connect(array(
+    public function balance() {
+      return $this->safe_request(array(
           'key' => $this->api_key,
           'action' => 'balance',
-      )), true);
+      ));
     }
 
-    public function refill($order_id) { // get balance
-      return json_decode($this->connect(array(
+    public function refill($order_id) {
+      return $this->safe_request(array(
           'key' => $this->api_key,
           'action' => 'refill',
           'order'  => $order_id,
-      )), true);
+      ));
     }
 
-    public function refill_status($refill_id) { // get balance
-      return json_decode($this->connect(array(
+    public function refill_status($refill_id) {
+      return $this->safe_request(array(
           'key' => $this->api_key,
           'action' => 'refill_status',
           'refill'  => $refill_id,
-      )), true);
+      ));
+    }
+
+    public function cancel($order_id) {
+      return $this->safe_request(array(
+          'key' => $this->api_key,
+          'action' => 'cancel',
+          'order'  => $order_id,
+      ));
     }
 
     // private function connect($post) {
@@ -99,8 +123,8 @@ class smm_standard{
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
       curl_setopt($ch, CURLOPT_POST, 1);
       curl_setopt($ch, CURLOPT_HEADER, 0);
-      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-      curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
+      curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
       curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
       if (is_array($post)) {
           curl_setopt($ch, CURLOPT_POSTFIELDS, join('&', $_post));

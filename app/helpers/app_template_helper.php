@@ -910,16 +910,15 @@ if (!function_exists('show_item_details')) {
                 break;
 
             case 'services':
-                if (!empty($item['desc'])) {
-                    $params = [
-                        'btn-class'        => 'btn-primary',
-                        'btn-title'        => lang('View'),
-                        'modal-id'         => 'service-'.$item['id'],
-                        'modal-title'            => $item['id'] . ' - '. $item['name'],
-                        'modal-body-content'     => render_modal_body_content($controller_name, $item),
-                    ];
-                    $xhtml =  render_modal_html($params);
-                }
+                // Always show View button
+                $params = [
+                    'btn-class'        => 'btn-primary',
+                    'btn-title'        => lang('View'),
+                    'modal-id'         => 'service-'.$item['id'],
+                    'modal-title'            => $item['id'] . ' - '. $item['name'],
+                    'modal-body-content'     => render_modal_body_content($controller_name, $item),
+                ];
+                $xhtml =  render_modal_html($params);
                 break;
         }
         return $xhtml;

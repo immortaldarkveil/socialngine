@@ -39,7 +39,7 @@
     <div id="modal-ajax" class="modal fade" tabindex="-1"></div>
     <!-- Theme Settings -->
     <?php
-      include 'blocks/theme_settings.php';
+      // include 'blocks/theme_settings.php';
     ?>
     <!-- Scripts -->
     <?php 

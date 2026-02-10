@@ -476,7 +476,7 @@ class provider_model extends MY_Model
                     "original_price"    => (double)$service['rate'],
                     "type"        	    => service_type_format($service['type']),
                     "dripfeed"  	    => (isset($service['dripfeed'])) ? (int)$service['dripfeed'] : 0,
-                    "desc"  	        => (isset($service['desc'])) ? $service['desc'] : '',
+                    "desc"  	        => (isset($service['desc']) && $service['desc'] != "") ? $service['desc'] : ((isset($service['description'])) ? $service['description'] : ''),
                     "refill"  	        => (isset($service['refill'])) ? (int)$service['refill'] : 0,
 					"refill_type"  	    => (isset($service['refill'])) ? (int)$service['refill'] : 0,
                 ];
@@ -496,7 +496,7 @@ class provider_model extends MY_Model
                     "api_provider_id"  	=> $params['api_id'],
                     "api_service_id"  	=> $service['service'],
                     "dripfeed"  	    => (isset($service['dripfeed'])) ? (int)$service['dripfeed'] : 0,
-                    "desc"  	        => (isset($service['desc'])) ? $service['desc'] : '',
+                    "desc"  	        => (isset($service['desc']) && $service['desc'] != "") ? $service['desc'] : ((isset($service['description'])) ? $service['description'] : ''),
                     "refill"  	        => (isset($service['refill'])) ? (int)$service['refill'] : 0,
 					"refill_type"  	    => (isset($service['refill'])) ? (int)$service['refill'] : 0,
                     "status"  			=> 1,

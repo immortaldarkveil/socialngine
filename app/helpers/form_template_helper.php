@@ -196,15 +196,19 @@ if (!function_exists('render_modal_body_content')) {
 
             case 'services':
 
-                if (!empty($item['desc'])) {
-                    $description = html_entity_decode($item['desc'], ENT_QUOTES);
-                    $description = str_replace("\n", "<br>", $description);
-                    $xhtml    = sprintf(
-                        '<div class="form-group">
-                            %s
-                        </div>',
-                        $description);
-                }
+                $description = !empty($item['desc']) ? html_entity_decode($item['desc'], ENT_QUOTES) : 'No description found';
+                $description = str_replace("\n", "<br>", $description);
+                $create_order_link = cn('new_order?service='.$item['id']);
+                $xhtml    = sprintf(
+                    '<div class="form-group">
+                        %s
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 text-right">
+                            <a href="%s" class="btn btn-primary">%s</a>
+                        </div>
+                    </div>',
+                    $description, $create_order_link, lang('create_order'));
                 break;
 
         }

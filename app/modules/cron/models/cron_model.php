@@ -159,6 +159,21 @@ class cron_model extends MY_Model {
                     $data_item['profit']        = $new_order_attr['profit'];
                 }
                 $this->db->update($this->tb_main, $data_item, ["id" => $item['id']]);
+
+                // Track average delivery time when order completes
+                if ($received_status == 'completed' && !empty($item['created']) && !empty($item['service_id'])) {
+                    $delivery_minutes = max(1, round((strtotime(NOW) - strtotime($item['created'])) / 60));
+                    $service = $this->get('avg_delivery_time, avg_delivery_orders', SERVICES, ['id' => $item['service_id']]);
+                    if ($service) {
+                        $old_avg   = (int)$service['avg_delivery_time'];
+                        $old_count = (int)$service['avg_delivery_orders'];
+                        $new_avg   = round((($old_avg * $old_count) + $delivery_minutes) / ($old_count + 1));
+                        $this->db->update(SERVICES, [
+                            'avg_delivery_time'   => $new_avg,
+                            'avg_delivery_orders' => $old_count + 1,
+                        ], ['id' => $item['service_id']]);
+                    }
+                }
             }
             echo $order_log . '<br>';
         }
