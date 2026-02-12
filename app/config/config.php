@@ -24,8 +24,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 |
 */
 
-$config['base_url'] = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") ? "https" : "http");
-$config['base_url'] .= "://" . $_SERVER['HTTP_HOST'] . "/";
+if (isset($_SERVER['HTTP_HOST'])) {
+    $config['base_url'] = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") ? "https" : "http");
+    $config['base_url'] .= "://" . $_SERVER['HTTP_HOST'] . "/";
+} else {
+    $config['base_url'] = 'http://localhost/';
+}
 
 
 /*
@@ -380,10 +384,11 @@ $config['encryption_key'] = ENCRYPTION_KEY;
 | except for 'cookie_prefix' and 'cookie_httponly', which are ignored here.
 |
 */
-$config['sess_driver'] = 'database';
+$config['sess_driver'] = 'redis';
 $config['sess_cookie_name'] = 'csrfToken';
 $config['sess_expiration'] = 7200;
-$config['sess_save_path'] = 'general_sessions';
+$redis_password = getenv('REDIS_PASSWORD') ?: 'S0cialNgin_R3dis_Sec_2026';
+$config['sess_save_path'] = 'tcp://127.0.0.1:6379?auth=' . $redis_password;
 $config['sess_match_ip'] = FALSE;
 $config['sess_time_to_update'] = 300;
 $config['sess_regenerate_destroy'] = FALSE;
@@ -453,72 +458,86 @@ $config['global_xss_filtering'] = true;
 */
 $config['csrf_protection'] = TRUE;
 
-if (stripos($_SERVER["REQUEST_URI"], '/add_funds/stripe') !== false) {
-    $config['csrf_protection'] = false;
-}
+if (isset($_SERVER["REQUEST_URI"])) {
+    if (stripos($_SERVER["REQUEST_URI"], '/add_funds/stripe') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], '/add_funds/two_checkout') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], '/add_funds/two_checkout') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], '/add_funds/unsuccess') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], '/add_funds/unsuccess') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], '/add_funds/perfectmoney') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], '/add_funds/perfectmoney') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], 'add_funds/paytm/complete') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], 'add_funds/paytm/complete') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], 'add_funds/razorpay/complete') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], 'add_funds/razorpay/complete') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], 'add_funds/freekassa/complete') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], 'add_funds/freekassa/complete') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], 'add_funds/payumoney/complete') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], 'add_funds/payumoney/complete') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], 'add_funds/paywant/complete') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], 'add_funds/paywant/complete') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], 'add_funds/mercadopago/create_payment') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], 'add_funds/mercadopago/create_payment') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], 'cashmaal_ipn') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], 'cashmaal_ipn') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], '_ipn') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], '_ipn') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], 'complete') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], 'complete') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], 'unitpay_ipn') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], 'unitpay_ipn') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], 'gbprimepay_ipn') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], 'gbprimepay_ipn') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], 'api/v1') !== false) {
-    $config['csrf_protection'] = false;
-}
+    if (stripos($_SERVER["REQUEST_URI"], 'api/v1') !== false) {
+        $config['csrf_protection'] = false;
+    }
 
-if (stripos($_SERVER["REQUEST_URI"], '/mail') !== false) {
-    $config['csrf_protection'] = false;
+    if (stripos($_SERVER["REQUEST_URI"], '/mail') !== false) {
+        $config['csrf_protection'] = false;
+    }
+
+    if (stripos($_SERVER["REQUEST_URI"], 'auth/google_callback') !== false) {
+        $config['csrf_protection'] = false;
+    }
+
+    if (stripos($_SERVER["REQUEST_URI"], 'paystack/webhook') !== false) {
+        $config['csrf_protection'] = false;
+    }
+
+    if (stripos($_SERVER["REQUEST_URI"], 'korapay/webhook') !== false) {
+        $config['csrf_protection'] = false;
+    }
 }
 $config['csrf_token_name'] = 'token';
 $config['csrf_cookie_name'] = 'token';

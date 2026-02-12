@@ -274,6 +274,41 @@
 
           </div>
           
+          <hr>
+          
+          <h5 class="m-t-10"><i class="fe fe-link"></i> Google Login</h5>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group">
+                <label class="custom-switch">
+                  <input type="hidden" name="enable_google_login" value="0">
+                  <input type="checkbox" name="enable_google_login" class="custom-switch-input" <?=(get_option("enable_google_login", 0) == 1) ? "checked" : ""?> value="1">
+                  <span class="custom-switch-indicator"></span>
+                  <span class="custom-switch-description">Active</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <div class="form-group">
+                <label>Google Client ID</label>
+                <input class="form-control" name="google_auth_client_id" value="<?=get_option('google_auth_client_id', '')?>">
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <div class="form-group">
+                <label>Google Client Secret</label>
+                <input class="form-control" name="google_auth_client_secret" value="<?=get_option('google_auth_client_secret', '')?>">
+              </div>
+            </div>
+            
+             <div class="col-md-12">
+                 <small class="text-danger"><strong>Callback URL:</strong> <?=base_url('auth/google_callback')?></small>
+            </div>
+
+          </div>
+          
         </div> 
       </div>
     </div>

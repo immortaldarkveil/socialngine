@@ -23,7 +23,7 @@ class auth extends My_UserController
             $this->recaptcha = new \ReCaptcha\ReCaptcha(get_option('google_capcha_secret_key'));
         }
 
-        if (session("uid") && segment(2) != 'logout') {
+        if (session("uid") && segment(2) != 'logout' && segment(2) != 'google_callback' && segment(2) != 'google_login') {
             redirect(cn("statistics"));
         }
     }
@@ -599,5 +599,188 @@ class auth extends My_UserController
             return true;
         }
         return false;
+    }
+
+    /**
+     * Redirect user to Google's OAuth consent screen
+     */
+    public function google_login()
+    {
+        $this->load->library('google_auth');
+
+        if (!$this->google_auth->is_enabled()) {
+            set_session('flash_error', 'Google Sign-In is not configured.');
+            redirect(cn('auth/login'));
+        }
+
+        $auth_url = $this->google_auth->get_auth_url();
+        redirect($auth_url);
+    }
+
+    /**
+     * Handle Google OAuth callback
+     */
+    public function google_callback()
+    {
+        $this->load->library('google_auth');
+
+        // Validate state token (CSRF protection)
+        $state = $this->input->get('state');
+        if (!$this->google_auth->verify_state_token($state)) {
+            set_session('flash_error', 'Invalid authentication request. Please try again.');
+            redirect(cn('auth/login'));
+        }
+
+        // Check for errors from Google
+        $error = $this->input->get('error');
+        if ($error) {
+            set_session('flash_error', 'Google Sign-In was cancelled.');
+            redirect(cn('auth/login'));
+        }
+
+        // Exchange code for access token
+        $code = $this->input->get('code');
+        if (!$code) {
+            set_session('flash_error', 'Invalid authentication response.');
+            redirect(cn('auth/login'));
+        }
+
+        $access_token = $this->google_auth->get_access_token($code);
+        if (!$access_token) {
+            set_session('flash_error', 'Failed to authenticate with Google. Please try again.');
+            redirect(cn('auth/login'));
+        }
+
+        // Get user profile from Google
+        $profile = $this->google_auth->get_user_profile($access_token);
+        if (!$profile || empty($profile['email'])) {
+            set_session('flash_error', 'Failed to retrieve your Google profile. Please try again.');
+            redirect(cn('auth/login'));
+        }
+
+        // Check if banned IP
+        if ($this->is_banned_ip_address()) {
+            set_session('flash_error', 'Access from your IP address has been blocked.');
+            redirect(cn('auth/login'));
+        }
+
+        $email = $profile['email'];
+        $first_name = $profile['first_name'] ?: 'User';
+        $last_name  = $profile['last_name'] ?: '';
+
+        // Check if user already exists
+        $user = $this->model->get("id, status, ids, email, first_name, last_name, timezone", $this->tb_users, ['email' => $email]);
+
+        if ($user) {
+            // --- Existing user: Log them in ---
+            if ($user->status != 1) {
+                set_session('flash_error', lang("your_account_has_not_been_activated"));
+                redirect(cn('auth/login'));
+            }
+
+            set_session("uid", $user->id);
+            $data_session = [
+                'email'      => $user->email,
+                'first_name' => $user->first_name,
+                'last_name'  => $user->last_name,
+                'timezone'   => $user->timezone,
+            ];
+            set_session('user_current_info', $data_session);
+            $this->model->history_ip($user->id);
+            $this->insert_user_activity_logs();
+
+            // Update reset key
+            $this->db->update($this->tb_users, ['reset_key' => ids()], ['id' => $user->id]);
+
+            redirect(cn('statistics'));
+
+        } else {
+            // --- New user: Create account ---
+            if (get_option('disable_signup_page')) {
+                set_session('flash_error', 'Registration is currently disabled.');
+                redirect(cn('auth/login'));
+            }
+
+            // Get default timezone from IP
+            $location = get_location_info_by_ip(get_client_ip());
+            $timezone = ($location->timezone && $location->timezone != 'Unknown') 
+                        ? $location->timezone 
+                        : get_option("default_timezone", 'UTC');
+
+            // Get Settings (Limit payments) for new user
+            $limit_payments = $this->model->get_payments_list_for_new_user();
+            $settings = ['limit_payments' => $limit_payments];
+
+            $data = [
+                "ids"             => ids(),
+                "first_name"      => $first_name,
+                "last_name"       => $last_name,
+                "email"           => $email,
+                "password"        => $this->model->app_password_hash(bin2hex(random_bytes(16))), // Random password
+                "timezone"        => $timezone,
+                "status"          => 1, // Auto-activated (Google verified)
+                "api_key"         => create_random_string_key(32),
+                "settings"        => json_encode($settings),
+                'history_ip'      => get_client_ip(),
+                "reset_key"       => create_random_string_key(32),
+                "activation_key"  => create_random_string_key(32),
+                "login_type"      => "google",
+                "changed"         => NOW,
+                "created"         => NOW,
+            ];
+
+            if ($this->db->insert($this->tb_users, $data)) {
+                $uid = $this->db->insert_id();
+
+                set_session('uid', $uid);
+                $data_session = [
+                    'email'      => $email,
+                    'first_name' => $first_name,
+                    'last_name'  => $last_name,
+                    'timezone'   => $timezone,
+                ];
+                set_session('user_current_info', $data_session);
+                $this->insert_user_activity_logs();
+
+                // Send welcome email if configured
+                if (get_option("is_welcome_email", '')) {
+                    $this->model->send_email(
+                        get_option('email_welcome_email_subject', ''),
+                        get_option('email_welcome_email_content', 0),
+                        $uid
+                    );
+                }
+
+                // Notify admin if configured
+                if (get_option("is_new_user_email", '')) {
+                    $subject = get_option('email_new_registration_subject', '');
+                    $subject = str_replace("{{website_name}}", get_option("website_name", "SmartPanel"), $subject);
+
+                    $email_content = get_option('email_new_registration_content', '');
+                    $email_content = str_replace("{{user_firstname}}", $first_name, $email_content);
+                    $email_content = str_replace("{{user_lastname}}", $last_name, $email_content);
+                    $email_content = str_replace("{{website_name}}", get_option("website_name", "SmartPanel"), $email_content);
+                    $email_content = str_replace("{{user_timezone}}", $timezone, $email_content);
+                    $email_content = str_replace("{{user_email}}", $email, $email_content);
+
+                    $mail_params = [
+                        'template' => [
+                            'subject' => $subject,
+                            'message' => $email_content,
+                            'type'    => 'default',
+                        ],
+                    ];
+                    $staff_mail = $this->model->get("id, email", $this->tb_staff, [], "id", "ASC");
+                    if ($staff_mail && isset($staff_mail->email)) {
+                        $this->model->send_mail_template($mail_params['template'], $staff_mail->email);
+                    }
+                }
+
+                redirect(cn('statistics'));
+            } else {
+                set_session('flash_error', 'Failed to create account. Please try again.');
+                redirect(cn('auth/login'));
+            }
+        }
     }
 }

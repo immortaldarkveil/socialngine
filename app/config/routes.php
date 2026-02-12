@@ -54,6 +54,10 @@ $route['404_override']                          = 'custom_page/page_404';
 $route['translate_uri_dashes']                  = FALSE;
 $route['set_language']                          = 'blocks/set_language';
 
+// Google OAuth
+$route['auth/google_login']                     = 'auth/auth/google_login';
+$route['auth/google_callback']                  = 'auth/auth/google_callback';
+
 // Settings page
 $route['new_order']                             = 'order/new_order';
 $route['tickets/(:num)'] = 'tickets/view/$1';
@@ -83,6 +87,8 @@ $route['coinpayments_ipn']  = 'add_funds/coinpayments/ipn/';
 $route['coinbase_ipn']      = 'add_funds/coinbase/ipn/';
 $route['cardlink_ipn']      = 'add_funds/cardlink/ipn/';
 $route['flutterwave_ipn']   = 'add_funds/flutterwave/ipn/';
+$route['paystack_ipn']      = 'add_funds/paystack/webhook/';
+$route['korapay_ipn']       = 'add_funds/korapay/webhook/';
 $route['razorpay_ipn']      = 'add_funds/razorpay/ipn/';
 $route['epayco_ipn']        = 'add_funds/epayco/ipn/';
 $route['webmoney_ipn']      = 'add_funds/webmoney/ipn/';

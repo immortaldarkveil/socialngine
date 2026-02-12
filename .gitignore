@@ -11,3 +11,11 @@ yarn-error.log
 composer.lock
 .DS_Store
 app/config.php
+public/provider_services/
+assets/uploads/
+cron.log
+error_log
+public/provider_services/
+assets/uploads/
+cron.log
+error_log

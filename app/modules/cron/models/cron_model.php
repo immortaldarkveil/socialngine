@@ -21,7 +21,7 @@ class cron_model extends MY_Model {
             $this->db->where("api_provider_id !=", 0);
             $this->db->where("api_order_id =", -1);
             $this->db->order_by("id", 'ASC');
-            $this->db->limit(5, 0);
+            $this->db->limit(500, 0);
             $query = $this->db->get();
             $result = $query->result();
         }
