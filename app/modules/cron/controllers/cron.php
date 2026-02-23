@@ -162,28 +162,26 @@ class cron extends MX_Controller
     public function order()
     {
         lock_file(['file_name' => 'order', 'title_message' => 'Order already running!']);
-        $items = $this->main_model->list_items('', ['task' => 'list-items-new-order']);
-        if (!$items) {
-            echo "There is no order at the present.<br>";
-            exit();
-        }
+        
+        // Limit to 15 orders per run to prevent timeouts on Shared Hosting
+        $params = [
+            'limit' => 15,
+            'start' => 0,
+        ];
+        
+        $items = $this->main_model->list_items($params, ['task' => 'list-items-new-order']);
+        
         if (!$items) {
             echo "There is no order at the present.<br>";
             exit();
         }
 
-        $this->load->library('redis_queue');
-        
+        // Direct Processing (Bypassing Redis for cPanel compatibility)
         foreach ($items as $key => $row) {
-            // Push to Redis Queue
-            $this->redis_queue->push('orders', (array)$row);
-            
-            // Mark as 'queued' in DB to prevent re-processing
-            $this->db->update($this->main_model->tb_main, ['status' => 'processing', 'changed' => NOW], ['id' => $row->id]);
-            
-            echo "Order ID {$row->id} queued.<br>";
+            $this->process_single_order($row);
+            echo "Order ID {$row->id} processed.<br>";
         }
-        echo "Successfully queued " . count($items) . " orders.";
+        echo "Successfully processed " . count($items) . " orders.";
     }
 
     // New worker endpoint (run via CLI)

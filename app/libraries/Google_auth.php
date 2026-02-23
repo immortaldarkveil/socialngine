@@ -42,6 +42,7 @@ class Google_auth
      */
     public function get_auth_url()
     {
+        log_message('error', 'Google Auth: Generating Auth URL');
         $params = [
             'client_id'     => $this->client_id,
             'redirect_uri'  => $this->redirect_uri,
@@ -60,6 +61,7 @@ class Google_auth
      */
     public function get_access_token($code)
     {
+        log_message('error', 'Google Auth: Exchanging code for token. Code: ' . substr($code, 0, 10) . '...');
         $post_data = [
             'code'          => $code,
             'client_id'     => $this->client_id,
@@ -75,6 +77,7 @@ class Google_auth
             return false;
         }
 
+        log_message('error', 'Google Auth: Token received successfully.');
         return $response['access_token'] ?? false;
     }
 
@@ -83,6 +86,7 @@ class Google_auth
      */
     public function get_user_profile($access_token)
     {
+        log_message('error', 'Google Auth: Fetching user profile.');
         $response = $this->http_get(self::USER_URL, $access_token);
         
         if (!$response || isset($response['error'])) {
@@ -90,6 +94,7 @@ class Google_auth
             return false;
         }
 
+        log_message('error', 'Google Auth: Profile received: ' . json_encode($response));
         return [
             'google_id'  => $response['id'] ?? '',
             'email'      => $response['email'] ?? '',

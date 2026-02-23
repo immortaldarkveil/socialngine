@@ -230,7 +230,7 @@ $config['allow_get_array'] = TRUE;
 | your log files will fill up very fast.
 |
 */
-$config['log_threshold'] = 0;
+$config['log_threshold'] = 1;
 
 /*
 |--------------------------------------------------------------------------
@@ -384,11 +384,10 @@ $config['encryption_key'] = ENCRYPTION_KEY;
 | except for 'cookie_prefix' and 'cookie_httponly', which are ignored here.
 |
 */
-$config['sess_driver'] = 'redis';
+$config['sess_driver'] = 'files';
 $config['sess_cookie_name'] = 'csrfToken';
 $config['sess_expiration'] = 7200;
-$redis_password = getenv('REDIS_PASSWORD') ?: 'S0cialNgin_R3dis_Sec_2026';
-$config['sess_save_path'] = 'tcp://127.0.0.1:6379?auth=' . $redis_password;
+$config['sess_save_path'] = sys_get_temp_dir();
 $config['sess_match_ip'] = FALSE;
 $config['sess_time_to_update'] = 300;
 $config['sess_regenerate_destroy'] = FALSE;

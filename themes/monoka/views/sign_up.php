@@ -92,7 +92,7 @@
                           <?=lang("already_have_account")?> <a href="<?=cn()?>"><?=lang("Login")?></a>
                         </div>
 
-                        <?php if(get_option('google_auth_client_id', '') != ''){ ?>
+                        <?php if(get_option('enable_google_login', 0) && get_option('google_auth_client_id', '') != ''){ ?>
                         <div style="text-align:center; margin-top:15px;">
                             <div style="position:relative; display:flex; align-items:center; justify-content:center; margin:8px 0 4px;">
                                 <div style="flex:1; height:1px; background:rgba(0,0,0,0.15);"></div>

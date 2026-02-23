@@ -53,8 +53,9 @@
           $cookie_pass = encrypt_decode($_COOKIE["cookie_pass"]);
         }
     ?>
-    <header id="home" class="header">
-        <div class="header-content">
+    <header id="home" class="header" style="position:relative; overflow:hidden;">
+        <canvas id="heroCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+        <div class="header-content" style="position:relative;z-index:1;">
             <div class="container">
                 <div class="row text-container">
                     <div class="col-lg-8 col-xl-7">
@@ -83,7 +84,7 @@
                                 ?>
                                 <div class="form-group checkbox">
                                     <input type="checkbox"  name="remember" <?=(isset($cookie_email) && $cookie_email != "") ? "checked" : ""?>>
-                                    <label class="text-white"><?=lang("remember_me")?></label>
+                                    <label style="color:#5000ca;"><?=lang("remember_me")?></label>
                                 </div>
                                 <?php }?>
                                 <div class="row">
@@ -110,11 +111,11 @@
 
                                 <?php if(!get_option('disable_signup_page') && !session('uid')){ ?>
                                 <div class="form-group">
-                                    <p><?=lang("dont_have_account_yet")?> <a class="white" href="<?=cn('auth/signup')?>"><?=lang("Sign_Up")?></a></p>
+                                    <p><?=lang("dont_have_account_yet")?> <a style="color:#5000ca;" href="<?=cn('auth/signup')?>"><?=lang("Sign_Up")?></a></p>
                                 </div>
                                 <?php }; ?>
 
-                                <?php if(get_option('google_auth_client_id', '') != ''){ ?>
+                                <?php if(get_option('enable_google_login', 0) && get_option('google_auth_client_id', '') != ''){ ?>
                                 <div class="form-group" style="text-align:center;">
                                     <div style="position:relative; display:flex; align-items:center; justify-content:center; margin:8px 0 4px;">
                                         <div style="flex:1; height:1px; background:rgba(255,255,255,0.3);"></div>
@@ -752,6 +753,174 @@
       </div>
     </div>
     
+    <script>
+    (function() {
+      var canvas = document.getElementById('heroCanvas');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var W, H;
+      var rockets  = [];
+      var sparks   = [];
+      var ROCKET_COUNT = 7;
+
+      /* Palette: greens, gold, white — fits Sacramento Green theme */
+      var COLORS = [
+        'rgba(120,255,160,',  /* bright green      */
+        'rgba(200,255,100,',  /* yellow-green       */
+        'rgba(255,220,80,',   /* gold               */
+        'rgba(255,255,255,',  /* white              */
+        'rgba(80,255,180,',   /* mint               */
+        'rgba(255,160,60,',   /* amber              */
+        'rgba(140,255,255,'   /* cyan-green         */
+      ];
+
+      function rand(a, b) { return a + Math.random() * (b - a); }
+      function pick(arr)  { return arr[Math.floor(Math.random() * arr.length)]; }
+
+      function resize() {
+        var header = document.getElementById('home');
+        W = canvas.width  = header ? header.offsetWidth  : window.innerWidth;
+        H = canvas.height = header ? header.offsetHeight : window.innerHeight;
+      }
+
+      /* ---- ROCKET ---- */
+      function makeRocket(staggerY) {
+        return {
+          x:      rand(W * 0.08, W * 0.92),
+          y:      (staggerY !== undefined) ? staggerY : H + rand(10, 50),
+          vx:     rand(-0.6, 0.6),
+          vy:     rand(-7, -4),         /* upward velocity */
+          color:  pick(COLORS),
+          trail:  [],
+          exploded: false,
+          /* explode between 20%-65% from top */
+          peakY:  rand(H * 0.10, H * 0.55)
+        };
+      }
+
+      /* ---- SPARK (explosion particle) ---- */
+      function explode(x, y, color) {
+        var count = Math.floor(rand(60, 95));
+        for (var i = 0; i < count; i++) {
+          var angle = (i / count) * Math.PI * 2 + rand(-0.15, 0.15);
+          var speed = rand(1.5, 5.5);
+          sparks.push({
+            x: x, y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            radius: rand(1.5, 3.5),
+            color:  color,
+            alpha:  rand(0.7, 1.0),
+            decay:  rand(0.013, 0.028),
+            gravity: rand(0.06, 0.13)
+          });
+        }
+        /* second ring of faster sparks for "flash" */
+        for (var j = 0; j < 20; j++) {
+          var a2 = rand(0, Math.PI * 2);
+          sparks.push({
+            x: x, y: y,
+            vx: Math.cos(a2) * rand(6, 11),
+            vy: Math.sin(a2) * rand(6, 11),
+            radius: rand(0.8, 1.8),
+            color:  'rgba(255,255,255,',
+            alpha:  rand(0.5, 0.9),
+            decay:  rand(0.03, 0.06),
+            gravity: rand(0.04, 0.09)
+          });
+        }
+      }
+
+      /* ---- INIT ---- */
+      function init() {
+        rockets = [];
+        sparks  = [];
+        for (var i = 0; i < ROCKET_COUNT; i++) {
+          var r = makeRocket(rand(H * 0.5, H + 60)); /* stagger start heights */
+          rockets.push(r);
+        }
+      }
+
+      /* ---- DRAW LOOP ---- */
+      function draw() {
+        /* dark fade trail instead of full clear — gives motion blur feel */
+        ctx.fillStyle = 'rgba(255,255,255,0.18)';
+        ctx.fillRect(0, 0, W, H);
+
+        /* --- rockets --- */
+        for (var i = rockets.length - 1; i >= 0; i--) {
+          var rk = rockets[i];
+          if (rk.exploded) { rockets.splice(i, 1); continue; }
+
+          rk.x += rk.vx;
+          rk.y += rk.vy;
+          rk.vy += 0.04; /* light gravity slowing the rocket */
+
+          rk.trail.push({ x: rk.x, y: rk.y });
+          if (rk.trail.length > 22) rk.trail.shift();
+
+          /* draw trail */
+          for (var t = 1; t < rk.trail.length; t++) {
+            var tf = t / rk.trail.length;
+            ctx.beginPath();
+            ctx.moveTo(rk.trail[t - 1].x, rk.trail[t - 1].y);
+            ctx.lineTo(rk.trail[t].x,     rk.trail[t].y);
+            ctx.strokeStyle = rk.color + (tf * 0.9) + ')';
+            ctx.lineWidth   = tf * 2.5;
+            ctx.lineCap     = 'round';
+            ctx.stroke();
+          }
+
+          /* rocket head glow */
+          var grd = ctx.createRadialGradient(rk.x, rk.y, 0, rk.x, rk.y, 5);
+          grd.addColorStop(0, rk.color + '1)');
+          grd.addColorStop(1, rk.color + '0)');
+          ctx.beginPath();
+          ctx.arc(rk.x, rk.y, 5, 0, Math.PI * 2);
+          ctx.fillStyle = grd;
+          ctx.fill();
+
+          /* trigger explosion */
+          if (rk.y <= rk.peakY || rk.vy >= 0) {
+            explode(rk.x, rk.y, rk.color);
+            rk.exploded = true;
+          }
+        }
+
+        /* --- sparks --- */
+        for (var s = sparks.length - 1; s >= 0; s--) {
+          var sp = sparks[s];
+          sp.alpha -= sp.decay;
+          if (sp.alpha <= 0) { sparks.splice(s, 1); continue; }
+
+          sp.x  += sp.vx;
+          sp.y  += sp.vy;
+          sp.vy += sp.gravity;
+          sp.vx *= 0.98;
+
+          ctx.beginPath();
+          ctx.arc(sp.x, sp.y, sp.radius, 0, Math.PI * 2);
+          ctx.fillStyle = sp.color + sp.alpha + ')';
+          ctx.fill();
+        }
+
+        /* replenish rockets */
+        while (rockets.length < ROCKET_COUNT) {
+          var nr = makeRocket();
+          /* stagger launches so they don't all fire at once */
+          nr.y = H + rand(60, 300);
+          rockets.push(nr);
+        }
+
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', function() { resize(); init(); });
+      resize();
+      init();
+      draw();
+    })();
+    </script>
     <?php 
       include_once 'blocks/script.blade.php';
     ?>

@@ -603,7 +603,7 @@ screen and (-ms-high-contrast: none) {
 }
 
 .header {
-	background-color: #5000ca;
+	background-color: #ffffff;
 }
 
 .header .header-content {
@@ -618,38 +618,38 @@ screen and (-ms-high-contrast: none) {
 
 .header h1 {
 	margin-bottom: 1rem;
-	color: #fff;
+	color: #5000ca;
 	font-size: 2.5rem;
 	line-height: 3rem;
 }
 
 .header .p-large {
 	margin-bottom: 2rem;
-	color: #FAFBFE;
+	color: #444444;
 }
 
 .header .btn-solid-lg {
 	margin-right: 0.5rem;
 	margin-bottom: 1.125rem;
 	margin-left: 0.5rem;
-	border-color: #FAFBFE;
-	background-color: #FAFBFE;
-	color: #5000ca;
+	border-color: #5000ca;
+	background-color: #5000ca;
+	color: #ffffff;
 }
 
 .header .btn-solid-lg:hover {
 	background: transparent;
-	color: #FAFBFE;
+	color: #5000ca;
 }
 
 .header .btn-outline-lg {
-	border-color: #FAFBFE;
-	color: #FAFBFE;
+	border-color: #5000ca;
+	color: #5000ca;
 }
 
 .header .btn-outline-lg:hover {
-	background-color: #FAFBFE;
-	color: #5000ca;
+	background-color: #5000ca;
+	color: #ffffff;
 }
 
 .header-frame {
